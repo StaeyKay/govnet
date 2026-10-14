@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
   ArrowDownToLine,
-  ArrowLeft,
   ArrowRight,
   BarChart3,
   Bell,
