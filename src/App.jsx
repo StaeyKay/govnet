@@ -2,12 +2,17 @@ import { useMemo, useState } from 'react'
 import {
   ArrowDownToLine,
   ArrowRight,
+  BarChart3,
   Bell,
   BookOpen,
+  Briefcase,
   CalendarDays,
+  Car,
   Clock3,
   CheckSquare,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   ClipboardList,
   FileSpreadsheet,
   FileText,
@@ -15,34 +20,81 @@ import {
   GitPullRequest,
   Headset,
   House,
+  Laptop,
   LayoutDashboard,
+  Mail,
   MapPin,
   Newspaper,
+  Plane,
   Plus,
   ListChecks,
   Search,
   ShieldCheck,
   Sparkles,
   UserRound,
+  Users,
   Vote,
+  Wallet,
   Workflow,
   X,
 } from 'lucide-react'
 import logo from './assets/images/logo.jpeg'
 import heroImage from './assets/images/Hero.jpg'
 
-const navigation = [
-  { label: 'Home', icon: House },
-  { label: 'Tasks', icon: CheckSquare, count: '7' },
-  { label: 'Workflows & Approvals', icon: GitPullRequest, count: '3' },
-  { label: 'Service Requests', icon: ClipboardList, count: '5' },
-  { label: 'Events', icon: CalendarDays },
-  { label: 'Calendar', icon: CalendarDays },
-  { label: 'News & Announcements', icon: Newspaper },
-  { label: 'Policies', icon: ShieldCheck },
-  { label: 'Documents', icon: Files },
-  { label: 'Polls', icon: Vote },
+const primaryNav = [
+  { label: 'Home', page: 'Home', icon: House },
+  { label: 'News & Announcements', page: 'News & Announcements', icon: Newspaper },
+  { label: 'Policies', page: 'Policies', icon: ShieldCheck },
+  { label: 'Upcoming Events', page: 'Events', icon: CalendarDays },
+  { label: 'Polls', page: 'Polls', icon: Vote },
+  { label: 'Documents', page: 'Documents', icon: Files },
+  { label: 'Calendar', page: 'Calendar', icon: CalendarDays },
+  { label: 'Tasks', page: 'Tasks', icon: CheckSquare, count: '7' },
+  { label: 'Workflows & Approvals', page: 'Workflows & Approvals', icon: GitPullRequest, count: '3' },
 ]
+
+const serviceRequestNav = [
+  { label: 'Payment / Finance', icon: Wallet, count: '5' },
+  { label: 'Vehicle Request', icon: Car, count: '4' },
+  { label: 'Procurement', icon: Briefcase, count: '4' },
+  { label: 'IT Helpdesk', icon: Headset, count: '2' },
+  { label: 'HR Services', icon: Users, count: '3' },
+]
+
+const corporateNav = [
+  { label: 'Staff Directory', page: 'Staff Directory', icon: Users },
+  { label: 'Knowledge Hub', page: 'Knowledge Hub', icon: BookOpen },
+]
+
+const workplaceModules = [
+  { abbr: 'IT', name: 'IT Help Desk', icon: Laptop, tone: 'sky' },
+  { abbr: 'E', name: 'E-Registry', icon: FileText, tone: 'violet' },
+  { abbr: 'CO', name: 'Correspondence', icon: Mail, tone: 'blue' },
+  { abbr: 'ME', name: 'Memo & Dispatch', icon: ClipboardList, tone: 'indigo' },
+  { abbr: 'E', name: 'E-Leave', icon: CalendarDays, tone: 'teal' },
+  { abbr: 'IM', name: 'Imprest', icon: Wallet, tone: 'amber' },
+  { abbr: 'RE', name: 'Reimbursement', icon: Wallet, tone: 'orange' },
+  { abbr: 'PR', name: 'Procurement', icon: Briefcase, tone: 'rose' },
+  { abbr: 'HR', name: 'HR Services', icon: Users, tone: 'pink' },
+  { abbr: 'TR', name: 'Travel', icon: Plane, tone: 'cyan' },
+  { abbr: 'DO', name: 'Documents', icon: Files, tone: 'green' },
+  { abbr: 'RE', name: 'Reports', icon: BarChart3, tone: 'emerald' },
+]
+
+const moduleToneClasses = {
+  sky: 'bg-sky-50 text-sky-700 ring-sky-100',
+  violet: 'bg-violet-50 text-violet-700 ring-violet-100',
+  blue: 'bg-blue-50 text-blue-700 ring-blue-100',
+  indigo: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
+  teal: 'bg-teal-50 text-teal-700 ring-teal-100',
+  amber: 'bg-amber-50 text-amber-700 ring-amber-100',
+  orange: 'bg-orange-50 text-orange-700 ring-orange-100',
+  rose: 'bg-rose-50 text-rose-700 ring-rose-100',
+  pink: 'bg-pink-50 text-pink-700 ring-pink-100',
+  cyan: 'bg-cyan-50 text-cyan-700 ring-cyan-100',
+  green: 'bg-[#e8f5ec] text-[#168c42] ring-[#d4eadc]',
+  emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+}
 
 const moduleDetails = {
   Tasks: {
@@ -127,6 +179,24 @@ const moduleDetails = {
     ],
     icon: Vote,
   },
+  'Staff Directory': {
+    description: 'Find colleagues across NITA and view contact details.',
+    rows: [
+      ['Yaw Boateng', 'Systems Administrator · Digital Services', 'View'],
+      ['Ama Mensah', 'Director, Administration', 'View'],
+      ['Kofi Boateng', 'HR Officer · People & Culture', 'View'],
+    ],
+    icon: Users,
+  },
+  'Knowledge Hub': {
+    description: 'Guides, FAQs, and learning resources for everyday work.',
+    rows: [
+      ['Getting started with the workplace', 'Onboarding · Updated Oct 2026', 'Open'],
+      ['ICT security guidelines', 'Information Security · PDF', 'Open'],
+      ['Procurement process overview', 'Finance · Guide', 'Open'],
+    ],
+    icon: BookOpen,
+  },
 }
 
 const initialTasks = [
@@ -161,8 +231,72 @@ function CardAction({ children, onClick }) {
   )
 }
 
+function SidebarNavButton({ label, icon: Icon, count, active, collapsed, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+      title={collapsed ? label : undefined}
+      className={`group relative flex w-full min-h-[34px] items-center gap-2 rounded-lg px-2 text-left text-[8px] font-bold leading-[1.15] transition ${
+        active
+          ? 'bg-white text-[#0D4B2B]'
+          : 'text-white hover:bg-white/10'
+      } ${collapsed ? 'justify-center px-0' : ''}`}
+    >
+      <Icon
+        size={18}
+        strokeWidth={2.25}
+        className={`shrink-0 ${active ? 'text-[#0D4B2B]' : 'text-white/90'}`}
+        aria-hidden="true"
+      />
+      {!collapsed && (
+        <>
+          <span className="min-w-0 flex-1">{label}</span>
+          {count && (
+            <span
+              className={`flex h-[17px] min-w-[17px] items-center justify-center rounded-full px-0.5 text-[7.5px] font-bold ${
+                active ? 'bg-[#0D4B2B] text-white' : 'bg-white/20 text-white'
+              }`}
+            >
+              {count}
+            </span>
+          )}
+        </>
+      )}
+      {collapsed && count && (
+        <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-[#21a652] ring-2 ring-[#0D4B2B]" aria-hidden="true" />
+      )}
+    </button>
+  )
+}
+
+function SidebarSectionLabel({ children, collapsed }) {
+  if (collapsed) return null
+  return (
+    <p className="mb-1.5 mt-5 px-2.5 text-[9px] font-bold uppercase tracking-[0.12em] text-white/55 first:mt-0">
+      {children}
+    </p>
+  )
+}
+
 function ModulePage({ page, onNewRequest, onHome }) {
   const module = moduleDetails[page]
+  if (!module) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-[28px] font-bold text-[#14271d]">{page}</h1>
+        <p className="text-[#607168]">This section is coming soon.</p>
+        <button
+          type="button"
+          onClick={onHome}
+          className="inline-flex items-center gap-2 rounded-xl border border-[#dce9df] bg-white px-4 py-3 text-sm font-semibold text-[#286a41] hover:bg-[#f7faf8]"
+        >
+          <LayoutDashboard size={17} /> Dashboard
+        </button>
+      </div>
+    )
+  }
   const ModuleIcon = module.icon
 
   return (
@@ -249,6 +383,7 @@ function App() {
   const [requestType, setRequestType] = useState('')
   const [profileOpen, setProfileOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [requests, setRequests] = useState([
     { name: 'IT Helpdesk', status: 'In progress', tone: 'green' },
     { name: 'Vehicle', status: 'Pending', tone: 'amber' },
@@ -280,42 +415,119 @@ function App() {
     )
   }
 
+  const sidebarWidth = sidebarCollapsed ? 'md:w-[72px]' : 'md:w-[248px]'
+
   return (
     <div className="min-h-screen bg-[#f4f8f5] text-[#182c21] md:flex">
-      <aside className="flex shrink-0 flex-col bg-[#0d4b2b] px-4 py-[22px] text-white md:min-h-screen md:w-[230px]">
-        <div className="mb-6 flex h-[88px] items-center justify-center rounded-xl bg-[#f8faf8] px-3">
-          <img className="max-h-full w-full object-contain" src={logo} alt="NITA Ghana and Republic of Ghana" />
+      <aside
+        className={`flex shrink-0 flex-col bg-[#0D4B2B] md:sticky md:top-0 md:h-[100dvh] md:border-r md:border-[#0a3d24] ${sidebarWidth} transition-[width] duration-200`}
+      >
+        <div className="hidden shrink-0 border-b border-white/10 md:block">
+          {!sidebarCollapsed ? (
+            <div className="px-4 py-4">
+              <p className="text-[9px] font-bold leading-4 text-white/60">NITA and Republic of Ghana</p>
+              <p className="mt-0.5 text-[13px] font-bold tracking-[-0.02em] text-white">NITA Workplace</p>
+              <p className="text-[10px] font-bold text-[#7dd4a0]">Smart Space</p>
+            </div>
+          ) : (
+            <div className="flex justify-center py-4">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[10px] font-bold text-[#0D4B2B]">
+                NW
+              </span>
+            </div>
+          )}
         </div>
-        <nav aria-label="Main navigation" className="flex gap-2 overflow-x-auto pb-1 md:flex-col md:overflow-visible">
-          {navigation.map(({ label, count, icon: NavigationIcon }) => (
+
+        <div
+          className={`hidden min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2.5 py-3 md:block ${sidebarCollapsed ? 'px-1.5' : ''}`}
+        >
+          <nav aria-label="Main navigation" className="w-full space-y-0.5">
+            {primaryNav.map(({ label, page, count, icon }) => (
+              <SidebarNavButton
+                key={page}
+                label={label}
+                icon={icon}
+                count={count}
+                collapsed={sidebarCollapsed}
+                active={activePage === page}
+                onClick={() => setActivePage(page)}
+              />
+            ))}
+          </nav>
+
+          {sidebarCollapsed && <div className="my-3 border-t border-white/15" aria-hidden="true" />}
+          <SidebarSectionLabel collapsed={sidebarCollapsed}>Service requests</SidebarSectionLabel>
+          <nav aria-label="Service requests" className="w-full space-y-0.5">
+            {serviceRequestNav.map(({ label, count, icon }) => (
+              <SidebarNavButton
+                key={label}
+                label={label}
+                icon={icon}
+                count={count}
+                collapsed={sidebarCollapsed}
+                active={activePage === 'Service Requests'}
+                onClick={() => setActivePage('Service Requests')}
+              />
+            ))}
+          </nav>
+
+          {sidebarCollapsed && <div className="my-3 border-t border-white/15" aria-hidden="true" />}
+          <SidebarSectionLabel collapsed={sidebarCollapsed}>Corporate</SidebarSectionLabel>
+          <nav aria-label="Corporate" className="w-full space-y-0.5">
+            {corporateNav.map(({ label, page, icon }) => (
+              <SidebarNavButton
+                key={page}
+                label={label}
+                icon={icon}
+                collapsed={sidebarCollapsed}
+                active={activePage === page}
+                onClick={() => setActivePage(page)}
+              />
+            ))}
+          </nav>
+        </div>
+
+        <div className="hidden shrink-0 border-t border-white/10 bg-[#0D4B2B] p-2.5 md:block">
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className={`flex w-full items-center rounded-xl border border-white/20 bg-white/10 py-2 text-white transition hover:bg-white/15 ${
+              sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-3 text-[8px] font-bold'
+            }`}
+          >
+            {sidebarCollapsed ? <ChevronRight size={17} /> : <><ChevronLeft size={17} /> Collapse sidebar</>}
+          </button>
+        </div>
+
+        <nav aria-label="Main navigation mobile" className="flex gap-2 overflow-x-auto bg-[#0D4B2B] p-3 md:hidden">
+          {primaryNav.slice(0, 6).map(({ label, page, icon: NavIcon }) => (
             <button
-              key={label}
+              key={page}
               type="button"
-              onClick={() => setActivePage(label)}
-              aria-current={activePage === label ? 'page' : undefined}
-              className={`flex min-h-[42px] shrink-0 items-center justify-between gap-3 rounded-[10px] px-[13px] text-left text-[14px] font-semibold transition md:w-full ${
-                activePage === label
-                  ? 'bg-[#21a652] text-white'
-                  : 'text-[#d8e8dc] hover:bg-white/10 hover:text-white'
+              onClick={() => setActivePage(page)}
+              className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-[8px] font-bold ${
+                activePage === page ? 'bg-white text-[#0D4B2B]' : 'bg-white/10 text-white'
               }`}
             >
-              <span className="flex min-w-0 items-center gap-3">
-                <NavigationIcon size={17} className="shrink-0" aria-hidden="true" />
-                <span className="max-w-[148px] leading-5">{label}</span>
-              </span>
-              {count && (
-                <span className="flex h-5 min-w-6 items-center justify-center rounded-full bg-white px-2 text-[12px] font-bold text-[#176336]">
-                  {count}
-                </span>
-              )}
+              <NavIcon size={18} />
+              {label.split(' ')[0]}
             </button>
           ))}
         </nav>
       </aside>
 
-      <main className="min-w-0 flex-1 px-5 pb-8 pt-6 md:px-8">
-        <header className="mb-5 flex items-center gap-3">
-          <label className="relative min-w-0 w-full max-w-[590px] flex-1">
+      <div className="flex min-w-0 flex-1 flex-col">
+      <main className="min-w-0 flex-1 px-5 pb-8 md:px-8">
+        <header className="sticky top-0 z-40 -mx-5 mb-5 grid grid-cols-1 items-center gap-4 border-b border-[#e3ebe5]/80 bg-[#f4f8f5]/95 px-5 py-4 backdrop-blur-md lg:grid-cols-[minmax(140px,200px)_1fr_auto] md:-mx-8 md:px-8">
+          <div className="flex items-center gap-3 lg:justify-start">
+            <img
+              className="h-11 w-auto max-w-[180px] object-contain object-left"
+              src={logo}
+              alt="NITA Ghana and Republic of Ghana"
+            />
+          </div>
+          <label className="relative mx-auto w-full max-w-[560px] lg:justify-self-center">
             <span className="sr-only">Search services, documents, people or actions</span>
             <Search aria-hidden="true" size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#809187]" />
             <input
@@ -325,7 +537,7 @@ function App() {
               className="h-[47px] w-full rounded-xl border border-[#d9e5dc] bg-white pl-11 pr-4 text-[14px] text-[#26392e] outline-none placeholder:text-[#77877d] focus:border-[#21a652] focus:ring-2 focus:ring-[#21a652]/15"
             />
           </label>
-          <div className="ml-auto flex shrink-0 items-center gap-3">
+          <div className="flex shrink-0 items-center justify-end gap-3 lg:justify-self-end">
             <div className="relative">
               <button
                 type="button"
@@ -367,7 +579,7 @@ function App() {
                 <img src={heroImage} alt="" className="h-8 w-8 rounded-full object-cover object-[35%_25%]" />
                 <span className="hidden text-left leading-tight sm:block">
                   <span className="block text-xs font-semibold text-[#21372a]">Yaw Boateng</span>
-                  <span className="block text-[10px] text-[#718076]">Staff</span>
+                  <span className="block text-[10px] text-[#718076]">Systems Administrator</span>
                 </span>
                 <ChevronDown size={15} className="text-[#718076]" />
               </button>
@@ -445,6 +657,36 @@ function App() {
                     <span className="hidden shrink-0 items-center gap-1 text-xs font-semibold text-[#21854a] group-hover:flex">
                       View all <ArrowRight size={14} />
                     </span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className="mb-6">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="text-[17px] font-bold tracking-[-0.02em] text-[#172a20]">Workplace Modules</h2>
+                <button
+                  type="button"
+                  onClick={() => setActivePage('Service Requests')}
+                  className="text-[13px] font-medium text-[#13803b] transition hover:text-[#0b5729]"
+                >
+                  View all modules
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                {workplaceModules.map(({ abbr, name, icon: ModuleIcon, tone }) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => setActivePage(name === 'Documents' ? 'Documents' : 'Service Requests')}
+                    className="group flex flex-col items-center gap-2.5 rounded-2xl border border-[#e3ebe5] bg-white px-3 py-4 text-center transition hover:-translate-y-0.5 hover:border-[#b8d9c2] hover:shadow-md"
+                  >
+                    <span
+                      className={`flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold ring-1 ring-inset ${moduleToneClasses[tone]}`}
+                    >
+                      {abbr.length <= 2 ? abbr : <ModuleIcon size={18} strokeWidth={2} />}
+                    </span>
+                    <span className="text-[12px] font-semibold leading-4 text-[#26382d] group-hover:text-[#15803d]">{name}</span>
                   </button>
                 ))}
               </div>
@@ -688,6 +930,7 @@ function App() {
           />
         )}
       </main>
+      </div>
 
       {requestOpen && (
         <div className="fixed inset-0 z-10 flex items-center justify-center bg-[#092817]/50 p-4">
