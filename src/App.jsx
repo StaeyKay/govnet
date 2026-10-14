@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
   ArrowDownToLine,
+  ArrowLeft,
   ArrowRight,
   BarChart3,
   Bell,
@@ -39,7 +40,8 @@ import {
   X,
 } from 'lucide-react'
 import logo from './assets/images/logo.jpeg'
-import heroImage from './assets/images/Hero.jpg'
+import heroImage from './assets/images/hero.jpg';
+import newsImage from './assets/images/news.jpg';
 
 const primaryNav = [
   { label: 'Home', page: 'Home', icon: House },
@@ -810,7 +812,7 @@ function App() {
 
           <section className="overflow-hidden rounded-2xl border border-[#dce9df] bg-white lg:col-span-2">
             <div className="relative flex min-h-[150px] items-end overflow-hidden bg-[#0d4b2b] p-4">
-              <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover object-[68%_35%]" />
+              <img src={newsImage} alt="" className="absolute inset-0 h-full w-full object-cover object-[68%_35%]" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#07391f]/90 via-[#07391f]/65 to-[#07391f]/20" />
               <div className="relative">
                 <span className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
