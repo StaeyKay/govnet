@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-family: "Barlow", "Segoe UI", Arial, sans-serif;
   color: #182c21;
   background: #f4f8f5;
   font-synthesis: none;
@@ -23,4 +23,67 @@ body {
 button,
 input {
   font: inherit;
+}
+
+.module-icon {
+  transform: translateY(0) scale(1);
+}
+
+.group:hover .module-icon {
+  filter: brightness(0.9);
+  transform: translateY(-2px) scale(1.1);
+}
+
+.homepage-interactive button:not(:disabled),
+.homepage-interactive li,
+.homepage-interactive .homepage-card {
+  cursor: pointer;
+}
+
+.homepage-interactive button:not(:disabled),
+.homepage-interactive li,
+.homepage-interactive .homepage-card,
+.homepage-interactive svg {
+  transition-duration: 180ms;
+  transition-timing-function: ease-out;
+}
+
+.homepage-interactive button:not(:disabled):hover {
+  filter: brightness(0.94);
+  box-shadow: 0 8px 18px rgb(13 75 43 / 12%);
+}
+
+.homepage-interactive li:hover {
+  background-color: #f1f8f3;
+  box-shadow: 0 4px 12px rgb(13 75 43 / 8%);
+  translate: 0 -1px;
+}
+
+.homepage-interactive .homepage-card:hover {
+  border-color: #abd0b5;
+  background-color: #f7fbf8;
+  box-shadow: 0 10px 22px rgb(13 75 43 / 10%);
+  translate: 0 -2px;
+}
+
+.homepage-interactive .weather-card:hover {
+  background-image: linear-gradient(135deg, #d8eedf, #edf7f0 52%, #c8e5d1);
+}
+
+.homepage-interactive button:hover svg,
+.homepage-interactive li:hover svg,
+.homepage-interactive .homepage-card:hover svg {
+  filter: brightness(0.78);
+  transform: translateY(-2px) scale(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

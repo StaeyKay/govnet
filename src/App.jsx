@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowDownToLine,
   ArrowRight,
@@ -8,11 +8,10 @@ import {
   Briefcase,
   CalendarDays,
   Car,
+  CloudSun,
   Clock3,
   CheckSquare,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   ClipboardList,
   FileSpreadsheet,
   FileText,
@@ -24,6 +23,7 @@ import {
   LayoutDashboard,
   Mail,
   MapPin,
+  Menu,
   Newspaper,
   Plane,
   Plus,
@@ -31,6 +31,7 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  Droplets,
   UserRound,
   Users,
   Vote,
@@ -38,7 +39,7 @@ import {
   Workflow,
   X,
 } from 'lucide-react'
-import logo from './assets/images/logo.jpeg'
+import logo from './assets/images/logo.png'
 import heroImage from './assets/images/hero.jpg';
 import newsImage from './assets/images/news.jpg';
 
@@ -68,18 +69,18 @@ const corporateNav = [
 ]
 
 const workplaceModules = [
-  { abbr: 'IT', name: 'IT Help Desk', icon: Laptop, tone: 'sky' },
-  { abbr: 'E', name: 'E-Registry', icon: FileText, tone: 'violet' },
-  { abbr: 'CO', name: 'Correspondence', icon: Mail, tone: 'blue' },
-  { abbr: 'ME', name: 'Memo & Dispatch', icon: ClipboardList, tone: 'indigo' },
-  { abbr: 'E', name: 'E-Leave', icon: CalendarDays, tone: 'teal' },
-  { abbr: 'IM', name: 'Imprest', icon: Wallet, tone: 'amber' },
-  { abbr: 'RE', name: 'Reimbursement', icon: Wallet, tone: 'orange' },
-  { abbr: 'PR', name: 'Procurement', icon: Briefcase, tone: 'rose' },
-  { abbr: 'HR', name: 'HR Services', icon: Users, tone: 'pink' },
-  { abbr: 'TR', name: 'Travel', icon: Plane, tone: 'cyan' },
-  { abbr: 'DO', name: 'Documents', icon: Files, tone: 'green' },
-  { abbr: 'RE', name: 'Reports', icon: BarChart3, tone: 'emerald' },
+  { name: 'Correspondence', icon: Mail, tone: 'blue' },
+  { name: 'Documents', icon: Files, tone: 'green' },
+  { name: 'E-Leave', icon: CalendarDays, tone: 'teal' },
+  { name: 'E-Registry', icon: FileText, tone: 'violet' },
+  { name: 'HR Services', icon: Users, tone: 'pink' },
+  { name: 'Imprest', icon: Wallet, tone: 'amber' },
+  { name: 'IT Help Desk', icon: Laptop, tone: 'sky' },
+  { name: 'Memo & Dispatch', icon: ClipboardList, tone: 'indigo' },
+  { name: 'Procurement', icon: Briefcase, tone: 'rose' },
+  { name: 'Reimbursement', icon: Wallet, tone: 'orange' },
+  { name: 'Reports', icon: BarChart3, tone: 'emerald' },
+  { name: 'Travel', icon: Plane, tone: 'cyan' },
 ]
 
 const moduleToneClasses = {
@@ -95,6 +96,21 @@ const moduleToneClasses = {
   cyan: 'bg-cyan-50 text-cyan-700 ring-cyan-100',
   green: 'bg-[#e8f5ec] text-[#168c42] ring-[#d4eadc]',
   emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+}
+
+function describeWeather(code) {
+  if (code === 0) return 'Clear sky'
+  if (code === 1) return 'Mainly clear'
+  if (code === 2) return 'Partly cloudy'
+  if (code === 3) return 'Overcast'
+  if (code === 45 || code === 48) return 'Fog'
+  if (code >= 51 && code <= 57) return 'Drizzle'
+  if (code >= 61 && code <= 67) return 'Rain'
+  if (code >= 71 && code <= 77) return 'Snow'
+  if (code >= 80 && code <= 82) return 'Rain showers'
+  if (code === 85 || code === 86) return 'Snow showers'
+  if (code >= 95) return 'Thunderstorm'
+  return 'Current conditions'
 }
 
 const moduleDetails = {
@@ -210,7 +226,7 @@ const initialTasks = [
 
 function Card({ title, action, children, className = '' }) {
   return (
-    <section className={`rounded-2xl border border-[#dce9df] bg-white p-5 ${className}`}>
+    <section className={`homepage-card rounded-2xl border border-[#dce9df] bg-white p-5 ${className}`}>
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-[16px] font-bold tracking-[-0.02em] text-[#172a20]">{title}</h2>
         {action}
@@ -385,6 +401,8 @@ function App() {
   const [profileOpen, setProfileOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [weather, setWeather] = useState(null)
+  const [weatherError, setWeatherError] = useState(false)
   const [requests, setRequests] = useState([
     { name: 'IT Helpdesk', status: 'In progress', tone: 'green' },
     { name: 'Vehicle', status: 'Pending', tone: 'amber' },
@@ -395,6 +413,48 @@ function App() {
     () => tasks.filter((task) => task.title.toLowerCase().includes(query.toLowerCase())),
     [query, tasks],
   )
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function loadWeather() {
+      const weatherUrl = new URL('https://api.open-meteo.com/v1/forecast')
+      weatherUrl.search = new URLSearchParams({
+        latitude: '5.6037',
+        longitude: '-0.1870',
+        current: 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code',
+        timezone: 'Africa/Accra',
+      })
+
+      try {
+        const response = await fetch(weatherUrl, { signal: controller.signal })
+        if (!response.ok) throw new Error(`Weather service returned ${response.status}`)
+        const data = await response.json()
+        const current = data.current
+        const values = [
+          current?.temperature_2m,
+          current?.relative_humidity_2m,
+          current?.apparent_temperature,
+          current?.weather_code,
+        ]
+        if (!values.every(Number.isFinite)) {
+          throw new Error('Weather service returned incomplete current conditions')
+        }
+
+        setWeather({
+          temperature: Math.round(current.temperature_2m),
+          humidity: Math.round(current.relative_humidity_2m),
+          feelsLike: Math.round(current.apparent_temperature),
+          condition: describeWeather(current.weather_code),
+        })
+      } catch (error) {
+        if (error.name !== 'AbortError') setWeatherError(true)
+      }
+    }
+
+    loadWeather()
+    return () => controller.abort()
+  }, [])
 
   function addRequest(event) {
     event.preventDefault()
@@ -423,21 +483,25 @@ function App() {
       <aside
         className={`flex shrink-0 flex-col bg-[#0D4B2B] md:sticky md:top-0 md:h-[100dvh] md:border-r md:border-[#0a3d24] ${sidebarWidth} transition-[width] duration-200`}
       >
-        <div className="hidden shrink-0 border-b border-white/10 md:block">
-          {!sidebarCollapsed ? (
-            <div className="px-4 py-4">
-              <p className="text-[9px] font-bold leading-4 text-white/60">NITA and Republic of Ghana</p>
-              <p className="mt-0.5 text-[13px] font-bold tracking-[-0.02em] text-white">NITA Workplace</p>
-              <p className="text-[10px] font-bold text-[#7dd4a0]">Smart Space</p>
-            </div>
-          ) : (
-            <div className="flex justify-center py-4">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[10px] font-bold text-[#0D4B2B]">
-                NW
-              </span>
-            </div>
-          )}
+        <div className="hidden shrink-0 p-2.5 md:block">
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            <Menu size={21} strokeWidth={2.25} aria-hidden="true" />
+          </button>
         </div>
+
+        {!sidebarCollapsed && (
+          <div className="hidden shrink-0 border-b border-white/10 px-4 pb-4 md:block">
+            <p className="text-[9px] font-bold leading-4 text-white/60">NITA and Republic of Ghana</p>
+            <p className="mt-0.5 text-[13px] font-bold tracking-[-0.02em] text-white">NITA Workplace</p>
+            <p className="text-[10px] font-bold text-[#7dd4a0]">Smart Space</p>
+          </div>
+        )}
 
         <div
           className={`hidden min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-2.5 py-3 md:block ${sidebarCollapsed ? 'px-1.5' : ''}`}
@@ -488,19 +552,6 @@ function App() {
           </nav>
         </div>
 
-        <div className="hidden shrink-0 border-t border-white/10 bg-[#0D4B2B] p-2.5 md:block">
-          <button
-            type="button"
-            onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
-            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className={`flex w-full items-center rounded-xl border border-white/20 bg-white/10 py-2 text-white transition hover:bg-white/15 ${
-              sidebarCollapsed ? 'justify-center px-0' : 'justify-center gap-2 px-3 text-[8px] font-bold'
-            }`}
-          >
-            {sidebarCollapsed ? <ChevronRight size={17} /> : <><ChevronLeft size={17} /> Collapse sidebar</>}
-          </button>
-        </div>
-
         <nav aria-label="Main navigation mobile" className="flex gap-2 overflow-x-auto bg-[#0D4B2B] p-3 md:hidden">
           {primaryNav.slice(0, 6).map(({ label, page, icon: NavIcon }) => (
             <button
@@ -523,7 +574,7 @@ function App() {
         <header className="sticky top-0 z-40 -mx-5 mb-5 grid grid-cols-1 items-center gap-4 border-b border-[#e3ebe5]/80 bg-[#f4f8f5]/95 px-5 py-4 backdrop-blur-md lg:grid-cols-[minmax(140px,200px)_1fr_auto] md:-mx-8 md:px-8">
           <div className="flex items-center gap-3 lg:justify-start">
             <img
-              className="h-11 w-auto max-w-[180px] object-contain object-left"
+              className="h-14 w-auto max-w-[220px] object-contain object-left"
               src={logo}
               alt="NITA Ghana and Republic of Ghana"
             />
@@ -604,26 +655,52 @@ function App() {
           </div>
         )}
         {activePage === 'Home' ? (
-          <>
-            <section className="relative mb-6 min-h-[218px] overflow-hidden rounded-2xl bg-[#0d4b2b] shadow-sm md:min-h-[236px]">
-              <img src={heroImage} alt="NITA colleagues working together" className="absolute inset-0 h-full w-full object-cover object-[45%_42%]" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#07391f]/95 via-[#07391f]/70 to-[#07391f]/15" />
-              <div className="relative flex min-h-[218px] max-w-xl flex-col items-start justify-center p-6 text-white md:min-h-[236px] md:p-9">
-                <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90">
-                  <Sparkles size={14} /> Your NITA workplace, at a glance
-                </span>
-                <h1 className="max-w-lg text-3xl font-bold leading-tight tracking-[-0.035em] md:text-[38px]">Good morning, Yaw</h1>
-                <p className="mt-2 max-w-md text-sm leading-6 text-white/85 md:text-[15px]">
-                  You have 7 open tasks and 3 approvals waiting for your review today.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setActivePage('Service Requests')}
-                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#21a652] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#168c42]"
-                >
-                  Explore services <ArrowRight size={16} />
-                </button>
+          <div className="homepage-interactive">
+            <section className="mb-6 grid grid-cols-1 gap-3 xl:grid-cols-4">
+              <div className="relative min-h-[218px] overflow-hidden rounded-2xl bg-[#0d4b2b] shadow-sm md:min-h-[236px] xl:col-span-3">
+                <img src={heroImage} alt="NITA colleagues working together" className="absolute inset-0 h-full w-full object-cover object-[45%_42%]" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#07391f]/95 via-[#07391f]/70 to-[#07391f]/15" />
+                <div className="relative flex min-h-[218px] max-w-xl flex-col items-start justify-center p-6 text-white md:min-h-[236px] md:p-9">
+                  <h1 className="max-w-lg text-3xl font-bold leading-tight tracking-[-0.035em] md:text-[38px]">Good morning, Yaw</h1>
+                  <p className="mt-2 max-w-md text-sm leading-6 text-white/85 md:text-[15px]">
+                    You have 7 open tasks and 3 approvals waiting for your review today.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setActivePage('Service Requests')}
+                    className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#21a652] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#168c42]"
+                  >
+                    Explore services <ArrowRight size={16} />
+                  </button>
+                </div>
               </div>
+              <section className="weather-card homepage-card flex min-h-[218px] flex-col justify-between rounded-2xl border border-[#c6e2ce] bg-gradient-to-br from-[#e8f5ec] via-[#f5faf6] to-[#d8eedf] p-5 shadow-sm md:min-h-[236px] xl:col-span-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#718076]">Weather</p>
+                    <h2 className="mt-1 text-sm font-bold text-[#21372a]">Accra, Ghana</h2>
+                  </div>
+                  <CloudSun size={27} className="text-[#d99b1d]" aria-hidden="true" />
+                </div>
+                <div>
+                  <p className="text-[42px] font-bold leading-none tracking-[-0.05em] text-[#172a20]">{weather ? `${weather.temperature}°` : '--°'}</p>
+                  <p aria-live="polite" className="mt-2 text-sm font-semibold text-[#405247]">
+                    {weather?.condition ?? (weatherError ? 'Current conditions unavailable' : 'Loading weather…')}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 border-t border-[#e9efeb] pt-3 text-xs text-[#718076]">
+                  <Droplets size={15} className="text-[#21854a]" aria-hidden="true" />
+                  {weather ? (
+                    <>
+                      <span>Humidity {weather.humidity}%</span>
+                      <span aria-hidden="true">·</span>
+                      <span>Feels like {weather.feelsLike}°</span>
+                    </>
+                  ) : (
+                    <span>{weatherError ? 'Weather data temporarily unavailable' : 'Fetching local conditions'}</span>
+                  )}
+                </div>
+              </section>
             </section>
 
             <section className="mb-6">
@@ -675,19 +752,19 @@ function App() {
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                {workplaceModules.map(({ abbr, name, icon: ModuleIcon, tone }) => (
+                {workplaceModules.map(({ name, icon: ModuleIcon, tone }) => (
                   <button
                     key={name}
                     type="button"
                     onClick={() => setActivePage(name === 'Documents' ? 'Documents' : 'Service Requests')}
-                    className="group flex flex-col items-center gap-2.5 rounded-2xl border border-[#e3ebe5] bg-white px-3 py-4 text-center transition hover:-translate-y-0.5 hover:border-[#b8d9c2] hover:shadow-md"
+                    className="group flex flex-col items-center gap-2.5 rounded-2xl border border-[#e3ebe5] bg-white px-3 py-4 text-center transition duration-200 hover:-translate-y-1 hover:border-[#b8d9c2] hover:bg-[#f4faf6] hover:shadow-lg hover:shadow-[#155c2e]/10 active:scale-[0.98]"
                   >
                     <span
-                      className={`flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold ring-1 ring-inset ${moduleToneClasses[tone]}`}
+                      className={`module-icon flex h-11 w-11 items-center justify-center rounded-xl ring-1 ring-inset transition duration-200 ${moduleToneClasses[tone]}`}
                     >
-                      {abbr.length <= 2 ? abbr : <ModuleIcon size={18} strokeWidth={2} />}
+                      <ModuleIcon size={20} strokeWidth={2} aria-hidden="true" />
                     </span>
-                    <span className="text-[12px] font-semibold leading-4 text-[#26382d] group-hover:text-[#15803d]">{name}</span>
+                    <span className="text-[12px] font-semibold leading-4 text-[#26382d] transition-colors group-hover:text-[#0d4b2b]">{name}</span>
                   </button>
                 ))}
               </div>
@@ -809,7 +886,7 @@ function App() {
             </ul>
           </Card>
 
-          <section className="overflow-hidden rounded-2xl border border-[#dce9df] bg-white lg:col-span-2">
+          <section className="homepage-card overflow-hidden rounded-2xl border border-[#dce9df] bg-white lg:col-span-2">
             <div className="relative flex min-h-[150px] items-end overflow-hidden bg-[#0d4b2b] p-4">
               <img src={newsImage} alt="" className="absolute inset-0 h-full w-full object-cover object-[68%_35%]" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#07391f]/90 via-[#07391f]/65 to-[#07391f]/20" />
@@ -922,7 +999,7 @@ function App() {
             <p className="text-[13px] text-[#65776c]">Saturday 38%</p>
           </Card>
             </div>
-          </>
+          </div>
         ) : (
           <ModulePage
             page={activePage}
